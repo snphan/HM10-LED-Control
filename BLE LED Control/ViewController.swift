@@ -162,6 +162,11 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         }
     }
     
+    @IBAction func sliderValueChanged(_ sender: UISlider) {
+        let sliderValue = String(sender.value)
+        changeSliderIntensity(device: bluetoothDevice, deviceCharacteristic: bluetoothCharacteristic, value: sliderValue)
+    }
+    
     // MARK: User Defined Functions
     
     func decodePeripheralState(peripheralState: CBPeripheralState) {
@@ -193,6 +198,13 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
         let data = someString.data(using: .utf8)
         device?.writeValue(data!, for: deviceCharacteristic!, type: .withoutResponse)
         print("wrote N")
+    }
+    
+    func changeSliderIntensity(device: CBPeripheral?, deviceCharacteristic: CBCharacteristic?, value: String) {
+        let data = value.data(using: .utf8)
+        device?.writeValue(data!, for: deviceCharacteristic!, type: .withoutResponse)
+        print("wrote \(value)")
+        
     }
 }
 
