@@ -13,8 +13,8 @@ SoftwareSerial HM10(rxPin, txPin);
 // Declare some variables used to store string input from the HM10
 
 char appData;
+String rawData = "";
 String inData = "";
-
 
 void setup() {
   // put your setup code here, to run once:
@@ -34,7 +34,10 @@ void loop() {
 HM10.listen();
 while (HM10.available() > 0) {
   appData = HM10.read();
-  inData = String(appData);
+  rawData = String(appData);
+  inData = extractState(rawData);
+  fadeValue = extractIntensity(rawData);
+  Serial.println(fadeValue);
   Serial.write(appData); //Output appData to terminal
 }
 if (Serial.available()) {
@@ -48,11 +51,31 @@ if (inData == "F") {
   digitalWrite(ledPin, LOW);
   delay(500);
 }
-// if the inData value is N then turn the LED on.
+// if the inData value is N then turn the LED on and analog write the value.
 if (inData == "N") {
   Serial.println("LED ON");
   digitalWrite(boardLedPin,HIGH);
-  digitalWrite(ledPin, HIGH);
+  analogWrite(ledPin, fadeValue);
   delay(500);  
 }
+}
+
+
+// Declare a function that spits out the state of the led on/off. Input should be 4 char string
+// Example: "N001", "N255" (note that the numbers go from 0 to 255)
+
+String extractState(String data) {
+  String interprettedData = String(data[0]);
+  return interprettedData;
+}
+
+// Declare a function that spits out the intensity value of the LED. Input should be 4 char string
+// Example: "N001", "N255" (note that the numbers go from 0 to 255)
+
+int extractIntensity(String data) {
+  int dataSize = data.length();
+  int intensityValue = 0;
+  for (int i = 1; i < dataSize; i++) {
+    intensityValue = intensityValue*10 + (data[i]-48);
+  }
 }
