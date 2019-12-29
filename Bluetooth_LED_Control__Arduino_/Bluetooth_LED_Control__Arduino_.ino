@@ -1,8 +1,9 @@
 #include <SoftwareSerial.h>
+#include <string.h>
 // Declare int to tell where each pin is
 int rxPin = 0;
 int txPin = 1;
-int ledPin = 7;
+int ledPin = 6;
 int boardLedPin = 13;
 int fadeValue;
 // Declare a software serial object called HM10 and according to documentation
@@ -12,8 +13,9 @@ SoftwareSerial HM10(rxPin, txPin);
 
 // Declare some variables used to store string input from the HM10
 
+int i = 0;
 char appData;
-String rawData = "";
+char rawData[4];
 String inData = "";
 
 void setup() {
@@ -23,40 +25,63 @@ void setup() {
   HM10.begin(9600); //set HM10 serial at 9600 baud rate.
   //Make the LED pins an output and turn them off.
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin,LOW);
+  analogWrite(ledPin,0);
   pinMode(boardLedPin, OUTPUT);
   digitalWrite(boardLedPin,LOW);
-  
+  memset(rawData, 0, sizeof rawData); // Set the rawData array to null
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 HM10.listen();
-while (HM10.available() > 0) {
+// Expect a string with format letter followed by numbers N000, F000, N255
+while (HM10.available() > 0 && i < 4) {
+  delay(1);
   appData = HM10.read();
-  rawData = String(appData);
+  rawData[i] = appData;
+  //Serial.println(rawData);
+  i++;
+}
+
+// Extract relevant data from rawData if there is something in it. If something
+// is sent then update it, if not don't do anything.
+if (rawData[0] != 0) {
+  //Serial.println(rawData);
+  //Serial.println("uhoh");
   inData = extractState(rawData);
   fadeValue = extractIntensity(rawData);
-  Serial.println(fadeValue);
-  Serial.write(appData); //Output appData to terminal
+  i = 0; // Reset the array
+  memset(rawData, 0, sizeof rawData); // Set the rawData array to null
+  //Serial.println(inData);
+  //Serial.println(fadeValue);
 }
+
+
+// Once we have the extracted the rawData, we don't need it anymore so always set it to
+// "" after extraction
+
+ 
+// This is to talk to the HM10 from serial
 if (Serial.available()) {
   delay(10);
   HM10.write(Serial.read());
 }
 // If the inData value is F then turn the LED off.
 if (inData == "F") {
-  Serial.println("LED OFF");
+  //Serial.println("LED OFF");
   digitalWrite(boardLedPin,LOW);
-  digitalWrite(ledPin, LOW);
-  delay(500);
+  analogWrite(ledPin, 0);
+  memset(rawData, 0, sizeof rawData); // Set the rawData array to null
+  delay(1);
 }
 // if the inData value is N then turn the LED on and analog write the value.
 if (inData == "N") {
-  Serial.println("LED ON");
+  //Serial.println("LED ON");
+  //Serial.println(inData);
+  //Serial.println(fadeValue);
   digitalWrite(boardLedPin,HIGH);
   analogWrite(ledPin, fadeValue);
-  delay(500);  
+  delay(1);  
 }
 }
 
@@ -73,9 +98,13 @@ String extractState(String data) {
 // Example: "N001", "N255" (note that the numbers go from 0 to 255)
 
 int extractIntensity(String data) {
-  int dataSize = data.length();
+  int stringSize = data.length()-1;
+  Serial.println(stringSize);
   int intensityValue = 0;
-  for (int i = 1; i < dataSize; i++) {
-    intensityValue = intensityValue*10 + (data[i]-48);
+  Serial.println(data);
+  for (int i = 1; i < stringSize; i++) {
+    intensityValue = intensityValue*10 + (int(data[i]) - 48);
   }
+  Serial.println(intensityValue);
+  return intensityValue;
 }

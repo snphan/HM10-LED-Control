@@ -94,6 +94,7 @@
                     <connections>
                         <outlet property="connectButton" destination="bfJ-TD-2ay" id="knd-QD-3zY"/>
                         <outlet property="disconnectButton" destination="zbl-Rh-P0y" id="VIA-Nf-Jz0"/>
+                        <outlet property="intensitySlider" destination="Z0o-8z-jpp" id="KRn-zO-ry8"/>
                         <outlet property="onOffSwitch" destination="86i-xT-F0C" id="EBW-eX-ZXY"/>
                         <outlet property="peripheralName" destination="87Q-f3-Fko" id="wVg-fx-nNz"/>
                         <outlet property="searchButton" destination="IR8-67-aMM" id="Pzd-Iu-2Dm"/>
