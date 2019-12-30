@@ -187,6 +187,13 @@ class ViewController: UIViewController, CBCentralManagerDelegate, CBPeripheralDe
             changeSliderIntensity(device: bluetoothDevice, deviceCharacteristic: bluetoothCharacteristic, value: sliderString)
             sliderPreviousValue = sliderValue
         }
+        // Make a case where the slider goes to zero or close to zero, set to zero
+        if (sliderValue <= 1 && delta > 1) {
+            let sliderString = String(0)
+            changeSliderIntensity(device: bluetoothDevice, deviceCharacteristic: bluetoothCharacteristic, value: sliderString)
+            sliderPreviousValue = 0
+        }
+        
     }
     
     // MARK: User Defined Functions

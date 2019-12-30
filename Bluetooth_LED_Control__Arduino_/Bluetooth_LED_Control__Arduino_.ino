@@ -3,7 +3,8 @@
 // Declare int to tell where each pin is
 int rxPin = 0;
 int txPin = 1;
-int ledPin = 6;
+int ledPin1 = 6;
+int ledPin2 = 5;
 int boardLedPin = 13;
 int fadeValue;
 // Declare a software serial object called HM10 and according to documentation
@@ -29,8 +30,10 @@ void setup() {
   Serial.println("HM10 serial started at 9600");
   HM10.begin(9600); //set HM10 serial at 9600 baud rate.
   //Make the LED pins an output and turn them off.
-  pinMode(ledPin, OUTPUT);
-  analogWrite(ledPin,0);
+  pinMode(ledPin1, OUTPUT);
+  analogWrite(ledPin1,0);
+  pinMode(ledPin2, OUTPUT);
+  analogWrite(ledPin2,0);
   pinMode(boardLedPin, OUTPUT);
   digitalWrite(boardLedPin,LOW);
   memset(rawData, 0, sizeof rawData); // Set the rawData array to null
@@ -44,21 +47,16 @@ while (HM10.available() > 0 && i < 4) {
   delay(1);
   appData = HM10.read();
   rawData[i] = appData;
-  //Serial.println(rawData);
   i++;
 }
 
 // Extract relevant data from rawData if there is something in it. If something
 // is sent then update it, if not don't do anything.
 if (rawData[0] != 0) {
-  //Serial.println(rawData);
-  //Serial.println("uhoh");
   inData = extractState(rawData);
   fadeValue = extractIntensity(rawData);
   i = 0; // Reset the array
   memset(rawData, 0, sizeof rawData); // Set the rawData array to null
-  //Serial.println(inData);
-  //Serial.println(fadeValue);
 }
 
 
@@ -75,27 +73,27 @@ if (Serial.available()) {
 if (inData == "F") {
   //Serial.println("LED OFF");
   digitalWrite(boardLedPin,LOW);
-  analogWrite(ledPin, 0);
+  analogWrite(ledPin1, 0);
+  analogWrite(ledPin2, 0);
   memset(rawData, 0, sizeof rawData); // Set the rawData array to null
   prevFadeValue = 0; // reset the fade value
   delay(1);
 }
 // if the inData value is N then turn the LED on and analog write the value.
 if (inData == "N") {
-  //Serial.println("LED ON");
-  //Serial.println(inData);
-  //Serial.println(prevFadeValue);
-  //Serial.println(fadeValue);
+  // To indicate that we are in the on loop turn the led pin 13 on
   digitalWrite(boardLedPin,HIGH);
 
   // If the fade value is ever 0 turn stuff off
   if (fadeValue == 0) {
-    analogWrite(ledPin, fadeValue);
+    analogWrite(ledPin1, fadeValue);
+    analogWrite(ledPin2, fadeValue);
     prevFadeValue = fadeValue;
   }
-  // Only change the fadeValue if the difference is less than 20
+  // Only change the fadeValue if the difference is less than 20. Prevent jumps in output greater than 20
   if (abs(fadeValue - prevFadeValue) < 20) {
-    analogWrite(ledPin, fadeValue);
+    analogWrite(ledPin1, fadeValue);
+    analogWrite(ledPin2, fadeValue);
     prevFadeValue = fadeValue;
   }
   else {
