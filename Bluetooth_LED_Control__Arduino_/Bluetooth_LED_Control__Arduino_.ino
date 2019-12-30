@@ -18,6 +18,11 @@ char appData;
 char rawData[4];
 String inData = "";
 
+// Initialize a varaible that keeps track of the fadeValue, if there are sudden jumps do not change
+// the analog input. Make an exception for the case where we turn off the input
+
+int prevFadeValue = 0;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -72,15 +77,32 @@ if (inData == "F") {
   digitalWrite(boardLedPin,LOW);
   analogWrite(ledPin, 0);
   memset(rawData, 0, sizeof rawData); // Set the rawData array to null
+  prevFadeValue = 0; // reset the fade value
   delay(1);
 }
 // if the inData value is N then turn the LED on and analog write the value.
 if (inData == "N") {
   //Serial.println("LED ON");
   //Serial.println(inData);
+  //Serial.println(prevFadeValue);
   //Serial.println(fadeValue);
   digitalWrite(boardLedPin,HIGH);
-  analogWrite(ledPin, fadeValue);
+
+  // If the fade value is ever 0 turn stuff off
+  if (fadeValue == 0) {
+    analogWrite(ledPin, fadeValue);
+    prevFadeValue = fadeValue;
+  }
+  // Only change the fadeValue if the difference is less than 20
+  if (abs(fadeValue - prevFadeValue) < 20) {
+    analogWrite(ledPin, fadeValue);
+    prevFadeValue = fadeValue;
+  }
+  else {
+    Serial.println("Input difference too high");
+    fadeValue = prevFadeValue; // The current fadeValue is erroneous so reset the fadeValue to the previous value
+  }
+  
   delay(1);  
 }
 }
@@ -99,7 +121,7 @@ String extractState(String data) {
 
 int extractIntensity(String data) {
   int stringSize = data.length()-1;
-  Serial.println(stringSize);
+  //Serial.println(stringSize);
   int intensityValue = 0;
   Serial.println(data);
   for (int i = 1; i < stringSize; i++) {
